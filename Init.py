@@ -43,3 +43,41 @@ class BaseData(DataBase):
         file = open("roei.txt", "w")
         pickle.dump(dict)
         file.close()
+        
+
+from threading import *
+from basedata import BaseData
+
+sem = Semaphore(10)
+lock = Semaphore(1)
+based = BaseData()
+
+
+def sync(func, key, val):
+    if func == 'r':
+        sem.acquire()
+        based.get_value(key)
+    if func == 'd':
+        sem.acquire(10)
+        lock.acquire()
+        based.set_value(key, val)
+    if func == 'w':
+        sem.acquire(10)
+        lock.acquire(key, val)
+
+
+def main():
+    threads = []
+    data = ''
+    while True:
+        for i in range(10):
+            func = input("w - writing, r - reading, d - deleting:")
+            key = input()
+            val = input()
+            t = Thread(target=sync, args=(func, key, val))
+            threads.insert(i, t)
+
+
+if __name__ == "__main__":
+    main()
+
