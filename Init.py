@@ -80,4 +80,36 @@ def main():
 
 if __name__ == "__main__":
     main()
+    
+    class Sync(BaseData):
+
+    MAX_SEMAPHORES = 10
+    
+    def __init__(self, thread_mode):
+        super(Sync, self).__init__()
+        if thread_mode:
+            self.lock = threading.Lock()
+            self.sem = threading.Semaphore(self.MAX_SEMAPHORES)
+        else:
+            self.lock = multiprocessing.Lock()
+            self.sem = multiprocessing.Semaphore(self.MAX_SEMAPHORES)
+
+    def write_lock(self):
+        self.lock.acquire()
+        for i in range(self.MAX_SEMAPHORES):
+            self.sem.acquire()
+    
+    def write_release(self):
+        pass
+    
+    def read_lock(self):
+        pass
+    
+    def read_release(self):
+        pass
+
+    def get_value(self, key):
+        self.read_lock()
+        super(Sync, self).get_value()
+        self.read_release()
 
