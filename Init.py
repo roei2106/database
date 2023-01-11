@@ -53,38 +53,15 @@ lock = Semaphore(1)
 based = BaseData()
 
 
-def sync(func, key, val):
-    if func == 'r':
-        sem.acquire()
-        based.get_value(key)
-    if func == 'd':
-        sem.acquire(10)
-        lock.acquire()
-        based.set_value(key, val)
-    if func == 'w':
-        sem.acquire(10)
-        lock.acquire(key, val)
+import multiprocessing
+import threading
+from threading import *
+from basedata import BaseData
 
 
-def main():
-    threads = []
-    data = ''
-    while True:
-        for i in range(10):
-            func = input("w - writing, r - reading, d - deleting:")
-            key = input()
-            val = input()
-            t = Thread(target=sync, args=(func, key, val))
-            threads.insert(i, t)
-
-
-if __name__ == "__main__":
-    main()
-    
-    class Sync(BaseData):
-
+class Sync(BaseData):
     MAX_SEMAPHORES = 10
-    
+
     def __init__(self, thread_mode):
         super(Sync, self).__init__()
         if thread_mode:
@@ -98,18 +75,33 @@ if __name__ == "__main__":
         self.lock.acquire()
         for i in range(self.MAX_SEMAPHORES):
             self.sem.acquire()
-    
+
     def write_release(self):
-        pass
-    
+        self.lock.release()
+        for i in range(self.MAX_SEMAPHORES):
+            self.sem.release()
+
     def read_lock(self):
-        pass
-    
+        self.lock.acquire()
+        self.sem.acquire()
+
     def read_release(self):
-        pass
+        self.lock.release()
+        self.sem.release()
 
     def get_value(self, key):
         self.read_lock()
         super(Sync, self).get_value()
         self.read_release()
+        
+    def set_value(self, key, val):
+        self.write_lock()
+        super(Sync, self).set_value()
+        self.write_release()
+        
+    def delete_value(self, key):
+        self.write_lock()
+        super(Sync, self).delete_value()
+        self.write_release()
+
 
